@@ -26,7 +26,7 @@ public class LineController {
         this.lineService = lineService;
         this.stationService = stationService;
     }
-
+    @CrossOrigin(origins="http://localhost:8090")
     @PostMapping("/lines")
     public ResponseEntity<LineResponse> createLine(@RequestBody LineRequest view) {
         Line line = view.toLine();
@@ -37,6 +37,7 @@ public class LineController {
                 .body(LineResponse.of(persistLine));
     }
 
+    @CrossOrigin(origins="http://localhost:8090")
     @GetMapping("/lines/{id}")
     public ResponseEntity<LineResponse> getLine(@PathVariable Long id) {
         return ResponseEntity.ok()
@@ -50,6 +51,7 @@ public class LineController {
                 .body(LineResponse.of(persistLine));
     }
 
+    @CrossOrigin(origins="http://localhost:8090")
     @GetMapping("/lines")
     public ResponseEntity<List<LineResponse>> getLines() {
         List<Line> lines = lineService.showLines();

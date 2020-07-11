@@ -8,6 +8,7 @@ import java.util.List;
 public class LineRequest {
     private String name;
     private LocalTime startTime;
+    
     private LocalTime endTime;
     private int intervalTime;
     private String color;
