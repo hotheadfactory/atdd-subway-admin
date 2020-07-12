@@ -5,6 +5,7 @@
       <form>
         <div class="mb-4">
           <input
+            v-model="stationName"
             class="appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full"
             id="station-name"
             type="text"
@@ -12,6 +13,7 @@
             placeholder="역 이름을 추가해주세요."
           />
           <button
+            v-on:click="addStation"
             id="station-add-btn"
             class="inline-block text-sm bg-yellow-500 hover:bg-yellow-400 hover:text-gray-700 text-gray-800 font-bold py-2 px-4 rounded"
           >추가</button>
@@ -27,6 +29,7 @@
           >
             {{value.name}}
             <button
+              v-on:click="deleteStation(value)"
               class="hover:bg-gray-300 hover:text-gray-500 text-gray-300 px-1 rounded-full float-right"
             >
               <span class="mdi mdi-delete"></span>
@@ -39,10 +42,15 @@
 </template>
 
 <script>
+import {
+  CONFIRM_MESSAGE,
+  ERROR_MESSAGE
+} from "../../public/utils/constants.js";
 import api from "../../public/api";
 export default {
   data() {
     return {
+      stationName: null,
       stations: []
     };
   },
@@ -53,7 +61,56 @@ export default {
     getStations() {
       api.station.get().then(data => {
         this.stations = data;
-        console.log(this.stations);
+      });
+    },
+    addStation() {
+      const regExp = new RegExp(/^[^\d\s]+$/);
+      const station = {
+        name: this.stationName
+      };
+      if (event) event.preventDefault();
+      if (!this.stationName) {
+        alert(ERROR_MESSAGE.NOT_EMPTY);
+        return;
+      }
+
+      if (this.validateReduplication()) {
+        alert(ERROR_MESSAGE.DUPLICATE_STATION_NAME);
+        this.stationName = null;
+        return;
+      }
+
+      if (!regExp.test(this.stationName)) {
+        alert(ERROR_MESSAGE.INCORRECT_STATION_NAME);
+        this.stationName = null;
+        return;
+      }
+      api.station.create(station).then(data => {
+        this.stations.push(data);
+      });
+      this.stationName = null;
+    },
+    validateReduplication() {
+      let isReduplicate = false;
+
+      this.stations.forEach(item => {
+        if (item.name === this.stationName) {
+          isReduplicate = true;
+          return;
+        }
+      });
+
+      return isReduplicate;
+    },
+    deleteStation(value) {
+      const isRemove = confirm(CONFIRM_MESSAGE.REMOVE);
+
+      if (!isRemove) {
+        return;
+      }
+
+      api.station.delete(value.id).then(() => {
+        this.stations.splice(this.stations.indexOf(value), 1);
       });
     }
   }

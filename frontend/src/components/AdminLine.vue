@@ -207,7 +207,6 @@ export default {
           alert(data.error);
           return;
         }
-        console.log(data);
         this.lines.push(data);
         this.closeModal();
       });
