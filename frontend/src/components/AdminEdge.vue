@@ -37,7 +37,38 @@
             </button>
           </div>
           <div class="w-full h-full">
-            <div class="subway-lines-slider"></div>
+            <tiny-slider
+              v-bind="tnsOptions"
+              v-if="lineStations.length > 0"
+              class="subway-lines-slider"
+            >
+              <div
+                v-for="line in lineStations"
+                v-bind:key="line.id"
+                class="inline-block w-1/2 px-2"
+              >
+                <div class="rounded-sm w-full slider-list" :data-id="line.id">
+                  <div class="border lint-title px-4 py-1" :class="line.color">
+                    {{ line.name }}
+                  </div>
+                  <div class="overflow-y-auto height-90">
+                    <div
+                      v-for="value in line.stations"
+                      v-bind:key="value.id"
+                      class="list-item border border-gray-200 py-2 px-4 text-gray-800"
+                      :data-id="value.id"
+                    >
+                      {{ value.name }}
+                      <button
+                        class="hover:bg-gray-300 hover:text-gray-500 text-gray-300 px-1 rounded-full float-right"
+                      >
+                        <span class="mdi mdi-delete"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </tiny-slider>
           </div>
         </div>
       </div>
@@ -55,19 +86,26 @@
       >
         <div class="modal-content text-left px-8 py-4">
           <div class="flex justify-center items-center pb-3 pt-3">
-            <p class="text-2xl font-bold ">구간 추가</p>
+            <p class="text-2xl font-bold">구간 추가</p>
           </div>
 
           <form class="mb-4">
             <div class="relative w-full mt-3 mb-6">
-              <label class="block text-gray-700 text-sm font-bold mb-2">
-                노선 선택
-              </label>
+              <label class="block text-gray-700 text-sm font-bold mb-2"
+                >노선 선택</label
+              >
               <div class="relative">
                 <select
+                  v-model="lineName"
                   id="station-select-options"
                   class="block appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
                 >
+                  <option
+                    v-for="line in lineStations"
+                    v-bind:key="line.id"
+                    :data-id="line.id"
+                    >{{ line.name }}</option
+                  >
                 </select>
                 <div
                   class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"
@@ -86,14 +124,15 @@
             </div>
             <div class="flex flex-wrap mb-8 w-full">
               <div class="w-1/3 h-12 text-gray-800">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                  이전역
-                </label>
+                <label class="block text-gray-700 text-sm font-bold mb-2"
+                  >이전역</label
+                >
                 <input
+                  v-model="departStationName"
                   class="appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full"
                   id="depart-station-name"
                   type="text"
-                  value=""
+                  value
                   placeholder="이전역"
                 />
               </div>
@@ -106,14 +145,15 @@
                 />️
               </div>
               <div class="w-1/3 h-12 text-gray-800">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                  대상역
-                </label>
+                <label class="block text-gray-700 text-sm font-bold mb-2"
+                  >대상역</label
+                >
                 <input
+                  v-model="arrivalStationName"
                   class="appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full"
                   id="arrival-station-name"
                   type="text"
-                  value=""
+                  value
                   placeholder="대상역"
                 />
               </div>
@@ -121,14 +161,15 @@
 
             <div class="flex flex-wrap mb-8 w-full">
               <div class="w-1/3 h-12 text-gray-800">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                  거리
-                </label>
+                <label class="block text-gray-700 text-sm font-bold mb-2"
+                  >거리</label
+                >
                 <input
+                  v-model="distance"
                   class="appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full"
                   id="distance"
                   type="number"
-                  value=""
+                  value
                   placeholder="거리"
                 />
               </div>
@@ -136,14 +177,15 @@
                 class="w-1/3 h-12 text-center text-gray-800 flex justify-center items-center relative top-28px"
               ></div>
               <div class="w-1/3 h-12 text-gray-800">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                  소요 시간
-                </label>
+                <label class="block text-gray-700 text-sm font-bold mb-2"
+                  >소요 시간</label
+                >
                 <input
+                  v-model="duration"
                   class="appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full"
                   id="duration"
                   type="number"
-                  value=""
+                  value
                   placeholder="소요 시간"
                 />
               </div>
@@ -156,6 +198,7 @@
                 취소
               </button>
               <button
+                v-on:click="addLineStation()"
                 type="submit"
                 id="submit-button"
                 class="px-4 bg-yellow-500 hover:bg-yellow-400 hover:text-gray-700 text-gray-800 rounded text-white text-sm"
@@ -171,13 +214,86 @@
 </template>
 
 <script>
-//import api from "../../public/api";
+import api from "../../public/api";
+import tns from "vue-tiny-slider";
 
 export default {
+  components: {
+    "tiny-slider": tns,
+  },
   data() {
     return {
+      lineStations: [],
       modalVisible: false,
+      lineName: null,
+      lineID: null,
+      departStationName: null,
+      arrivalStationName: null,
+      preStation: null,
+      station: null,
+      distance: null,
+      duration: null,
+      tnsOptions: {
+        container: ".subway-lines-slider",
+        loop: true,
+        slideBy: "page",
+        speed: 400,
+        autoplayButtonOutput: false,
+        "mouse-drag": true,
+        lazyload: true,
+        controlsContainer: "#slider-controls",
+        items: 1,
+        edgePadding: 25,
+      },
     };
+  },
+  mounted() {
+    this.getLineStations();
+  },
+  methods: {
+    getLineStations() {
+      api.line.get().then((data) => {
+        this.lineStations = data;
+      });
+    },
+    async addLineStation() {
+      event.preventDefault();
+      const stations = await api.station.get();
+      this.preStation = stations.find(
+        (station) => station.name === this.departStationName
+      );
+      this.station = stations.find(
+        (station) => station.name === this.arrivalStationName
+      );
+      console.log(this.station);
+      api.lineStation
+        .create(
+          this.lineStations.find((line) => line.name === this.lineName).id,
+          {
+            preStationId: this.preStation ? this.preStation.id : null,
+            stationId: this.station ? this.station.id : null,
+            distance: this.distance,
+            duration: this.duration,
+          }
+        )
+        .then((data) => {
+          if (data.error) throw data;
+          this.modalVisible = false;
+          this.getLineStations();
+          this.cleanFields();
+        })
+        .catch(() => {
+          alert("올바르지 않은 요청입니다.");
+        });
+    },
+    cleanFields() {
+      this.lineName = this.departStationName = this.arrivalStationName = this.preStation = this.station = this.distance = this.duration = null;
+    },
   },
 };
 </script>
+
+<style>
+@import "../../public/css/admin-edge.css";
+@import "../../public/lib/slider/tiny-slider.css";
+</style>

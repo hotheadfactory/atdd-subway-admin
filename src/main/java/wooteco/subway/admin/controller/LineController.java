@@ -44,6 +44,7 @@ public class LineController {
                 .body(findLineWithStationsById(id));
     }
 
+    @CrossOrigin(origins="http://localhost:8090")
     @PutMapping("/lines/{id}")
     public ResponseEntity<LineResponse> updateLine(@PathVariable Long id, @RequestBody LineRequest view) {
         Line persistLine = lineService.updateLine(id, view.toLine());
@@ -59,6 +60,7 @@ public class LineController {
                 .body(findAllLineWithStations(lines));
     }
 
+    @CrossOrigin(origins="http://localhost:8090")
     @DeleteMapping("/lines/{id}")
     public ResponseEntity<LineResponse> deleteLine(@PathVariable Long id) {
         lineService.deleteLineById(id);
@@ -66,6 +68,7 @@ public class LineController {
                 .build();
     }
 
+    @CrossOrigin(origins="http://localhost:8090")
     @PutMapping("/lines/{id}/stations")
     public ResponseEntity<LineResponse> createLineStation(@PathVariable Long id,
                                                           @RequestBody @Valid LineStationCreateRequest lineStationCreateRequest) {
@@ -74,6 +77,7 @@ public class LineController {
                 .body(findLineWithStationsById(id));
     }
 
+    @CrossOrigin(origins="http://localhost:8090")
     @DeleteMapping("/lines/{lineId}/stations/{stationId}")
     public void deleteLineStation(@PathVariable Long lineId, @PathVariable Long stationId) {
         lineService.removeLineStation(lineId, stationId);
