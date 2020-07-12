@@ -14,24 +14,52 @@
           <button
             id="station-add-btn"
             class="inline-block text-sm bg-yellow-500 hover:bg-yellow-400 hover:text-gray-700 text-gray-800 font-bold py-2 px-4 rounded"
-          >
-            추가
-          </button>
+          >추가</button>
         </div>
       </form>
       <div class="mt-5 flex station-list-container relative overflow-y-auto">
-        <div id="station-list" class="w-full"></div>
+        <div id="station-list" class="w-full">
+          <div
+            v-for="value in stations"
+            v-bind:key="value.id"
+            class="list-item border border-gray-200 py-2 px-4 text-gray-800"
+            :data-id="value.id"
+          >
+            {{value.name}}
+            <button
+              class="hover:bg-gray-300 hover:text-gray-500 text-gray-300 px-1 rounded-full float-right"
+            >
+              <span class="mdi mdi-delete"></span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<style>
-.station-list-container {
-  max-height: calc(100% - 100px);
-}
+<script>
+import api from "../../public/api";
+export default {
+  data() {
+    return {
+      stations: []
+    };
+  },
+  mounted() {
+    this.getStations();
+  },
+  methods: {
+    getStations() {
+      api.station.get().then(data => {
+        this.stations = data;
+        console.log(this.stations);
+      });
+    }
+  }
+};
+</script>
 
-#station-name {
-  width: calc(100% - 66px);
-}
+<style>
+@import "../../public/css/admin-station.css";
 </style>
